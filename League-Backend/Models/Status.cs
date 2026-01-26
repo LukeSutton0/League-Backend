@@ -1,4 +1,4 @@
-﻿namespace League_Backend.Models.RiotAccountPuuidResponses
+﻿namespace League_Backend.Models
 {
     public class Status
     {

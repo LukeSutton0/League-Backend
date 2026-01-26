@@ -1,3 +1,4 @@
+using League_Backend.Services.MatchService;
 using League_Backend.Services.UserService;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,6 +12,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IMatchService, MatchService>();
 string? apiKey = builder.Configuration["APIKeys:RiotApi"];
 
 var app = builder.Build();

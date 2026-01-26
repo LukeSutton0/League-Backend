@@ -24,18 +24,19 @@ namespace League_Backend.Services.UserService
             tagLine = TagLineHelper.TryStripHashtagFromTagLine(tagLine);
             string encodedTagLine = Uri.EscapeDataString(tagLine);
 
-            string url = $"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{encodedGameName}/{encodedTagLine}?api_key={_riotApiKey}";
+            string url = $"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{encodedGameName}/{encodedTagLine}";
             HttpRequestMessage httpRequestMessage = new(HttpMethod.Get, url);
+            httpRequestMessage.Headers.Add("X-Riot-Token", _riotApiKey);
             HttpClient httpClient = _httpClientFactory.CreateClient();
 
             HttpResponseMessage response = await httpClient.SendAsync(httpRequestMessage);
             string json = await response.Content.ReadAsStringAsync();
             if (!response.IsSuccessStatusCode)
             {
-                RiotAccountPuuidErrorResponse? riotErrorResponse;
+                RiotErrorResponse? riotErrorResponse;
                 try
                 {
-                    riotErrorResponse = JsonSerializer.Deserialize<RiotAccountPuuidErrorResponse>(json);
+                    riotErrorResponse = JsonSerializer.Deserialize<RiotErrorResponse>(json);
                     string message = riotErrorResponse?.status?.message ?? "Unknown Riot error";
                     return ServiceResult<string>.Failure($"Riot API returned {(int)response.StatusCode} ({response.StatusCode}), {message}", response.StatusCode);
                 }
