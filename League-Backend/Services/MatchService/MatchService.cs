@@ -7,23 +7,18 @@ namespace League_Backend.Services.MatchService
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<MatchService> _logger;
-        private readonly string _riotApiKey;
 
         public MatchService(ILogger<MatchService> logger, IHttpClientFactory httpClientFactory, IConfiguration config) {
             _httpClientFactory = httpClientFactory;
             _logger = logger;
-            _riotApiKey = config["APIKeys:RiotApi"] ?? throw new Exception("API Key can't be null");
         }
 
         public async Task<ServiceResult<List<string>>> GetLast100MatchIdsAsync(string userPuuid)
         {
             string encodedUserPuuid = Uri.EscapeDataString(userPuuid);
             string url = $"https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/{encodedUserPuuid}/ids?start=0&count=100";
-            HttpRequestMessage httpRequestMessage = new(HttpMethod.Get, url);
-            httpRequestMessage.Headers.Add("X-Riot-Token", _riotApiKey);
-            HttpClient httpClient = _httpClientFactory.CreateClient();
-
-            HttpResponseMessage response = await httpClient.SendAsync(httpRequestMessage);
+            HttpClient httpClient = _httpClientFactory.CreateClient("RiotApiClient");
+            HttpResponseMessage response = await httpClient.GetAsync(url);
             string json = await response.Content.ReadAsStringAsync();
             
             if (!response.IsSuccessStatusCode)
@@ -52,6 +47,42 @@ namespace League_Backend.Services.MatchService
                 return ServiceResult<List<string>>.NotFound("PUUID not found / incorrect");
             }
             return ServiceResult<List<string>>.Success(matchIds ?? []);
+        }
+
+        public async Task<ServiceResult<string>> GetUserProfileStats(string userPuuid)
+        {
+            string encodedUserPuuid = Uri.EscapeDataString(userPuuid);
+            string url = $"https://euw1.api.riotgames.com/lol/league/v4/entries/by-puuid/{encodedUserPuuid}";
+            HttpClient httpClient = _httpClientFactory.CreateClient("RiotApiClient");
+            HttpResponseMessage response = await httpClient.GetAsync(url);
+            string json = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                RiotErrorResponse? riotErrorResponse;
+                try
+                {
+                    riotErrorResponse = JsonSerializer.Deserialize<RiotErrorResponse>(json);
+                    string message = riotErrorResponse?.status?.message ?? "Unknown Riot error";
+                    return ServiceResult<string>.Failure($"Riot API returned {(int)response.StatusCode} ({response.StatusCode}), {message}", response.StatusCode);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError("Failed to deserialise error response {ex}", ex);
+                    return ServiceResult<string>.Failure($"Riot API returned {(int)response.StatusCode} ({response.StatusCode})", response.StatusCode);
+                }
+            }
+            List<UserProfileStatResponse>? stats;
+            try
+            {
+                stats = await response.Content.ReadFromJsonAsync<List<UserProfileStatResponse>>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Failed to deserialise success response {ex}", ex);
+                return ServiceResult<string>.NotFound("PUUID not found / incorrect");
+            }
+            return ServiceResult<string>.Success(JsonSerializer.Serialize(stats));
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using League_Backend.Helpers;
 using League_Backend.Models;
 using League_Backend.Models.RiotAccountPuuidResponses;
+using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 
 namespace League_Backend.Services.UserService
@@ -25,12 +26,10 @@ namespace League_Backend.Services.UserService
             string encodedTagLine = Uri.EscapeDataString(tagLine);
 
             string url = $"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{encodedGameName}/{encodedTagLine}";
-            HttpRequestMessage httpRequestMessage = new(HttpMethod.Get, url);
-            httpRequestMessage.Headers.Add("X-Riot-Token", _riotApiKey);
-            HttpClient httpClient = _httpClientFactory.CreateClient();
-
-            HttpResponseMessage response = await httpClient.SendAsync(httpRequestMessage);
+            HttpClient httpClient = _httpClientFactory.CreateClient("RiotApiClient");
+            HttpResponseMessage response = await httpClient.GetAsync(url);
             string json = await response.Content.ReadAsStringAsync();
+
             if (!response.IsSuccessStatusCode)
             {
                 RiotErrorResponse? riotErrorResponse;

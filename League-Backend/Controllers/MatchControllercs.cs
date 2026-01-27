@@ -18,10 +18,21 @@ namespace League_Backend.Controllers
             _matchService = matchService;
         }
 
-        [HttpPost(Name = "GetLast100Matches")]
+        [HttpPost("GetLast100Matches", Name = "GetLast100Matches")]
         public async Task<IActionResult> GetLast100MatchIds(string userPuuid)
         {
             ServiceResult<List<string>> serviceResult = await _matchService.GetLast100MatchIdsAsync(userPuuid);
+            if (!serviceResult.IsSuccessful)
+            {
+                return StatusCode((int)serviceResult.StatusCode, serviceResult.Errors);
+            }
+            return Ok(serviceResult.Data);
+        }
+
+        [HttpPost("StartTrackingUsersLP", Name = "StartTrackingUsersLP")]
+        public async Task<IActionResult> StartTrackingUsersLP(string userPuuid)
+        {
+            var serviceResult = await _matchService.GetUserProfileStats(userPuuid);
             if (!serviceResult.IsSuccessful)
             {
                 return StatusCode((int)serviceResult.StatusCode, serviceResult.Errors);

@@ -20,7 +20,7 @@ namespace League_Backend.Controllers
         }
 
 
-        [HttpPost(Name = "GetUserPUUID")]
+        [HttpPost("GetUserPuuid", Name = "GetUserPuid")]
         public async Task<IActionResult> GetUserPUUID(string gameName, string tagLine)
         {
             ServiceResult<string> serviceResult = await _userService.GetPuuidAsync(gameName, tagLine);
