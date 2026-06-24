@@ -84,5 +84,11 @@ namespace League_Backend.Services.MatchService
             }
             return ServiceResult<string>.Success(JsonSerializer.Serialize(stats));
         }
+
+        public void AddUserToStartTracking(string userPuuid)
+        {
+            
+
+        }
     }
 }

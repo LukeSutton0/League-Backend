@@ -1,5 +1,7 @@
+using League_Backend.Contexts;
 using League_Backend.Services.MatchService;
 using League_Backend.Services.UserService;
+using Microsoft.EntityFrameworkCore;
 using System.Net.Http.Headers;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +15,8 @@ builder.Services.AddHttpClient("RiotApiClient", client =>
 });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddDbContext<MainContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("MainDb")));
+
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IMatchService, MatchService>();
 
